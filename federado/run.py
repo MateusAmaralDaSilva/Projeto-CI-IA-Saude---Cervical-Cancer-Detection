@@ -14,7 +14,6 @@ from torchvision.transforms import v2 as tranformsv2
 
 train_transform = tranformsv2.Compose([
     tranformsv2.RandomRotation(15),
-    tranformsv2.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
     tranformsv2.Normalize(mean=[0.485, 0.456, 0.406],
                 std=[0.229, 0.224, 0.225]),
 ])

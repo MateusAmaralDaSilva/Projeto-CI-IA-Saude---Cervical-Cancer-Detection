@@ -6,8 +6,29 @@ import torch
 import time
 import sklearn.metrics as skmetrics
 from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
 #from sklearn.linear_model import LogisticRegression
 from statsmodels.miscmodels.ordinal_model import OrderedModel
+from matplotlib import pyplot as plt
+from pathlib import Path
+
+plot_path = './plots/'
+
+
+def count_files(directory: str) -> int:
+    return len([f for f in Path(directory).iterdir() if f.is_file()])
+
+def plot_embeddings(embeddings, labels):
+
+    plt.figure(figsize=(8, 6))
+    scatter = plt.scatter(embeddings[:, 0], embeddings[:, 1], c=labels, cmap='viridis', alpha=0.7)
+    plt.colorbar(scatter, label='Class Label')
+    plt.title('Embeddings Visualization')
+    plt.xlabel('PCA Component 1')
+    plt.ylabel('PCA Component 2')
+    plt.grid(True)
+    plt.savefig(f'{plot_path}embeddings{count_files(plot_path)}.png')
+    plt.close()
 
 def ordinal_regression_validation(embeddings, labels):
     model = OrderedModel(
@@ -30,7 +51,6 @@ def ordinal_regression_validation(embeddings, labels):
     mae = np.mean(np.abs(error))
     var_error = np.var(error)
     r2_score = 1 - (ss_res / ss_tot)
-    
     return mse, mae, var_error, r2_score #reg
 
 def clustering_validation(embeddings, labels):
@@ -137,5 +157,13 @@ class SypakExperiment(Experiment):
             embeddings=torch.cat(all_emb).detach().cpu().numpy(),
             labels=torch.cat(y_real).numpy()
         )
-
+        
+        pca = PCA(n_components=2)
+        embeddings_2d = pca.fit_transform(torch.cat(all_emb).detach().cpu().numpy())
+        plot_embeddings(embeddings_2d, torch.cat(y_real).numpy())
+        
+        @staticmethod
+        def count_files(directory: str) -> int:
+            return len([f for f in Path(directory).iterdir() if f.is_file()])
+        self.save_index = self.count_files(self.save_directory)
         return float(loss), {'ACCURACY': accuracy, 'PRECISION': precision, 'RECALL': recall, 'F1_SCORE': f1_score, 'NMI': nmi, 'ARI': ari, 'SILHOUETTE': silhouette, 'SQUARED_ERROR': squared_error,'MSE': mse, 'MAE': mae, 'VAR_ERROR': var_error, 'R2': r2}
