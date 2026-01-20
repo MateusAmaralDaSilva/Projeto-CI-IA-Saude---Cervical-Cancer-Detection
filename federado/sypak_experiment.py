@@ -14,7 +14,6 @@ from pathlib import Path
 
 plot_path = './plots/'
 
-
 def count_files(directory: str) -> int:
     return len([f for f in Path(directory).iterdir() if f.is_file()])
 
